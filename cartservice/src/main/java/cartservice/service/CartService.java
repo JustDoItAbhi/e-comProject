@@ -1,7 +1,6 @@
 package cartservice.service;
 
 import cartservice.client.ProductServiceClient;
-import cartservice.dtos.CartItemResponseDto;
 import cartservice.dtos.CartRequestDto;
 import cartservice.dtos.CartResposneDtos;
 import cartservice.dtos.ProductResponseDto;
@@ -9,6 +8,7 @@ import cartservice.entity.CartItems;
 import cartservice.entity.Carts;
 import cartservice.entity.UserDetails;
 import cartservice.mapper.CartMapper;
+import cartservice.repository.CartItemsRepository;
 import cartservice.repository.CartRepository;
 import cartservice.repository.UserDetailsReposirtoy;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,18 +26,19 @@ public class CartService implements IcartServices{
 private CartRepository cartRepository;
     private ProductServiceClient productServiceClient;
     private UserDetailsReposirtoy userDetailsReposirtoy;
+    private CartItemsRepository cartItemsRepository;
     @Autowired
     @Qualifier("productServiceRestClient")
     private RestClient restClient;
 
     public CartService(CartRepository cartRepository, ProductServiceClient productServiceClient,
-                       UserDetailsReposirtoy userDetailsReposirtoy) {
+                       UserDetailsReposirtoy userDetailsReposirtoy, CartItemsRepository cartItemsRepository) {
         this.cartRepository = cartRepository;
         this.productServiceClient = productServiceClient;
         this.userDetailsReposirtoy = userDetailsReposirtoy;
+        this.cartItemsRepository = cartItemsRepository;
     }
-
-        @Override
+    @Override
         public CartResposneDtos addItemToCart(CartRequestDto dto) {
             // Validate if the user exists
             Optional<UserDetails> existingUser = userDetailsReposirtoy.findByUserEmail(dto.getUserId());
@@ -75,15 +76,29 @@ private CartRepository cartRepository;
             return CartMapper.fromCart(savedCart);
         }
     @Override
-    public CartItemResponseDto removeItemFromCart(String userId, long productID) {
-        Carts cart = cartRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Cart not found for user: " + userId));
-        cartRepository.deleteById(productID);
-        cartRepository.save(cart);
-        // Convert removed item details into response DTO
-        CartItemResponseDto responseDto = new CartItemResponseDto();
-        responseDto.setProductId(productID);
-        return responseDto;
+    public CartResposneDtos removeItemFromCart(String userId, long productId) {
+        Carts cart = cartRepository.findByUserId(userId).orElseThrow(
+                () -> new RuntimeException("Cart not found for user: " + userId));
+        List<CartItems>updateCartItems=new ArrayList<>();
+        for(CartItems items:cart.getItems()) {
+            if (items.getProductId() != productId) {
+                updateCartItems.add(items);
+            }
+        }
+        double totalcost=0.0;
+        int n=updateCartItems.size();
+        for(int i=0;i<n;i++){
+            totalcost+=updateCartItems.get(i).getQuantity()*updateCartItems.get(i).getPrice();
+        }
+        cart.setTotal(totalcost);
+            if(updateCartItems.size()==cart.getItems().size()) {
+                throw new RuntimeException("CART ID NOT FOUND " + productId);
+            }
+            cart.setItems(updateCartItems);
+            cartRepository.save(cart);
+       cartItemsRepository.deleteById(productId);
+
+        return CartMapper.fromCart(cart);
     }
 
     @Override

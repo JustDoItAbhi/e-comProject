@@ -68,14 +68,6 @@ public class ProductServiceImpl implements ProductService {
             throw new ProductNotFoundException("PRODUCT NOT FOUNT "+id);
         }
         Products products=savedProduct.get();
-//        ProductResponseDto responseDto=new ProductResponseDto();
-//        responseDto.setId(products.getId());
-//        responseDto.setStock(products.getStock());
-//        responseDto.setImage(products.getImage());
-//        responseDto.setPrice(products.getPrice());
-//        responseDto.setName(products.getName());
-//        responseDto.setDescription(products.getDescription());
-//        responseDto.setCategoryes(products.getCategoryes());
         return ProductMapper.forSerching(products);
     }
 

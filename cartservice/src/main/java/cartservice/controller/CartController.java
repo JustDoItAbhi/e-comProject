@@ -1,10 +1,9 @@
 package cartservice.controller;
 
-import cartservice.dtos.CartItemResponseDto;
-import cartservice.dtos.CartRequestDto;
-import cartservice.dtos.CartResposneDtos;
-import cartservice.dtos.ProductResponseDto;
+import cartservice.dtos.*;
+import cartservice.entity.UserDetails;
 import cartservice.service.IcartServices;
+import cartservice.service.UserServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +14,12 @@ public class CartController {
     @Autowired
     private IcartServices icartServices;
 
-//    @GetMapping("/{userid}")
-//    public ResponseEntity<String> getCart(@PathVariable("userid") String userid) {
-//        return ResponseEntity.ok(icartServices.getCart(userid));
-//    }
+    @Autowired
+    private UserServices userServices;
+    @GetMapping("/login/{userID}")
+    public ResponseEntity<UserDetails> getByiD(@PathVariable("userID")String userID) {
+        return ResponseEntity.ok(userServices.createUser(userID));
+    }
 
     @PostMapping("/add")
     public ResponseEntity<CartResposneDtos> getItams(@RequestBody CartRequestDto dtos) {
@@ -35,9 +36,9 @@ public class CartController {
         return ResponseEntity.ok(icartServices.getByIds(id));
     }
 
-    @DeleteMapping("/deleteCart/{email}/{productId}")
-    public ResponseEntity<CartItemResponseDto> remoceCart(@PathVariable("email") String userId, @PathVariable long productId) {
-        return ResponseEntity.ok(icartServices.removeItemFromCart(userId, productId));
+    @DeleteMapping("/deleteCart/userId/{userId}/productId/{productId}")
+    public ResponseEntity<CartResposneDtos> removeCart(@PathVariable("userId") String userId, @PathVariable("productId")long productId) {
+        return ResponseEntity.ok(icartServices.removeItemFromCart(userId,productId));
     }
 
     @GetMapping("/getByUserId/{userId}")
