@@ -71,7 +71,10 @@ public class OrderItemServicesImpl implements OrderItemServices {// IMPLEMENTATI
 //                "http://localhost:8090/user/signup"
             }
             OrderResponseDto orderResponseDto=getCartItems(cartiD);
-            check.setOrderId(orderResponseDto.getOrderid());
+            if(orderResponseDto==null){
+                throw new OrderCannotPLacedexception("CART NOT VALID "+ cartiD);
+            }
+//            check.setOrderId(orderResponseDto.getOrderid());
 
             check= UserMapper.fromUserResponse(dto,orderResponseDto);
             redisTemplate.opsForValue().set(email,check);
